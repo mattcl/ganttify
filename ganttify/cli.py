@@ -92,7 +92,7 @@ def cli(data, outfile, width, label_limit, timescale):
     """
     try:
         data = json.loads(data)
-    except json.decoder.JSONDecodeError:
+    except ValueError:
         # this is a bit of a dumb sanity check, but it will probably suffice
         if '[' not in data and os.path.exists(data):
             with open(data) as f:
