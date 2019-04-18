@@ -3,6 +3,7 @@
 """Console script for ganttify."""
 import click
 import json
+import os
 
 import ganttify
 
@@ -86,8 +87,19 @@ def cli(data, outfile, width, label_limit, timescale):
 
     For more control, recommend importing the ganttify module and invoking
     make_chart from a script.
+
+    The data argument here can be a json blob or a filename
     """
-    data = json.loads(data)
+    try:
+        data = json.loads(data)
+    except json.decoder.JSONDecodeError:
+        # this is a bit of a dumb sanity check, but it will probably suffice
+        if '[' not in data and os.path.exists(data):
+            with open(data) as f:
+                data = json.load(f)
+        else:
+            raise
+
     ganttify.make_chart(
         data,
         outfile,

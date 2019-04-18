@@ -87,3 +87,26 @@ def describe_cli():
                 timescale='hours')
 
             assert os.path.exists(str(tmpdir.join('foo.html')))
+
+    def allows_for_data_to_be_a_file(mocker, runner, data, tmpdir):
+        with tmpdir.as_cwd():
+            # sanity check
+            assert not os.path.exists(str(tmpdir.join('chart.html')))
+
+            spy = mocker.patch('ganttify.make_chart', wraps=ganttify.make_chart)
+
+            with open('datafile.json', 'w') as f:
+                json.dump(data, f)
+
+            args = ['datafile.json']
+            result = _invoke(runner, args)
+            assert result.exit_code == 0
+
+            spy.assert_called_once_with(
+                data,
+                'chart.html',
+                labelLimit=ganttify.DEFAULT_LABEL_LIMIT,
+                width=ganttify.DEFAULT_WIDTH,
+                timescale=ganttify.DEFAULT_TIMESCALE)
+
+            assert os.path.exists(str(tmpdir.join('chart.html')))
