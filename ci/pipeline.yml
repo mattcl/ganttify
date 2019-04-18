@@ -23,6 +23,8 @@ jobs:
         - name: source
       run:
         path: source/ci/test.sh
+        args: ['-e', 'py27']
+        dir: source
 
 - name: py35
   plan:
@@ -39,6 +41,8 @@ jobs:
         - name: source
       run:
         path: source/ci/test.sh
+        args: ['-e', 'py35']
+        dir: source
 
 - name: py36
   plan:
@@ -55,3 +59,23 @@ jobs:
         - name: source
       run:
         path: source/ci/test.sh
+        args: ['-e', 'py36,flake8']
+        dir: source
+
+- name: package
+  plan:
+  - get: source
+    trigger: true
+    passed: [py27, py35, py36]
+
+  - task: setup.py
+    config:
+      platform: linux
+      image_resource:
+        type: docker-image
+        source: {repository: 'python:3.6'}
+      inputs:
+        - name: source
+      run:
+        path: source/ci/package.sh
+        dir: source
