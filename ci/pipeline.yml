@@ -1,4 +1,10 @@
 ---
+resource_types:
+  - name: slack-alert
+    type: docker-image
+    source:
+      repository: arbourd/concourse-slack-alert-resource
+
 resources:
   - name: source
     type: git
@@ -6,6 +12,11 @@ resources:
       uri: 'git@github.com:mattcl/ganttify.git'
       branch: master
       private_key: ((clone_key))
+
+  - name: notify
+    type: slack-alert
+    source:
+      url: ((slack_hook))
 
 jobs:
 - name: unit
@@ -58,6 +69,14 @@ jobs:
           path: ci/test.sh
           args: ['-e', 'py36,flake8']
           dir: source
+    on_failure:
+      put: notify
+      params:
+        alert_type: failed
+    on_abort:
+      put: notify
+      params:
+        alert_type: aborted
 
 - name: maybe_release
   plan:
@@ -65,7 +84,7 @@ jobs:
     trigger: true
     passed: [unit]
 
-  - task: setup.py
+  - task: build_and_release
     config:
       platform: linux
       image_resource:
@@ -81,3 +100,15 @@ jobs:
       run:
         path: ci/release.sh
         dir: source
+    on_success:
+      put: notify
+      params:
+        alert_type: success
+    on_failure:
+      put: notify
+      params:
+        alert_type: failed
+    on_abort:
+      put: notify
+      params:
+        alert_type: aborted
