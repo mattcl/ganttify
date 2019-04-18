@@ -24,7 +24,7 @@ jobs:
       inputs:
         - name: source
       run:
-        path: source/ci/test.sh
+        path: ci/test.sh
         args: ['-e', 'py27']
         dir: source
 
@@ -44,7 +44,7 @@ jobs:
       inputs:
         - name: source
       run:
-        path: source/ci/test.sh
+        path: ci/test.sh
         args: ['-e', 'py35']
         dir: source
 
@@ -64,7 +64,7 @@ jobs:
       inputs:
         - name: source
       run:
-        path: source/ci/test.sh
+        path: ci/test.sh
         args: ['-e', 'py36,flake8']
         dir: source
 
@@ -83,5 +83,5 @@ jobs:
       inputs:
         - name: source
       run:
-        path: source/ci/package.sh
+        path: ci/package.sh
         dir: source
