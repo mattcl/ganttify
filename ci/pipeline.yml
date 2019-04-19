@@ -12,6 +12,8 @@ resources:
       uri: 'git@github.com:mattcl/ganttify.git'
       branch: master
       private_key: ((clone_key))
+      ignore_paths:
+        - ci/**
 
   - name: notify
     type: slack-alert
@@ -19,96 +21,100 @@ resources:
       url: ((slack_hook))
 
 jobs:
-- name: unit
-  plan:
-  - get: source
-    trigger: true
+  - name: unit
+    plan:
+      - get: source
+        trigger: true
 
-  - aggregate:
-    - task: py27
-      config:
-        platform: linux
-        image_resource:
-          type: docker-image
-          source:
-            repository: python
-            tag: 2.7
-        inputs:
-          - name: source
-        run:
-          path: ci/test.sh
-          args: ['-e', 'py27']
-          dir: source
+      - aggregate:
+          - task: py27
+            config:
+              platform: linux
+              image_resource:
+                type: docker-image
+                source:
+                  repository: python
+                  tag: 2.7
+              inputs:
+                - name: source
+              run:
+                path: ci/test.sh
+                args: ['-e', 'py27']
+                dir: source
 
-    - task: py35
-      config:
-        platform: linux
-        image_resource:
-          type: docker-image
-          source:
-            repository: python
-            tag: 3.5
-        inputs:
-          - name: source
-        run:
-          path: ci/test.sh
-          args: ['-e', 'py35']
-          dir: source
+          - task: py35
+            config:
+              platform: linux
+              image_resource:
+                type: docker-image
+                source:
+                  repository: python
+                  tag: 3.5
+              inputs:
+                - name: source
+              run:
+                path: ci/test.sh
+                args: ['-e', 'py35']
+                dir: source
 
-    - task: py36
-      config:
-        platform: linux
-        image_resource:
-          type: docker-image
-          source:
-            repository: python
-            tag: 3.6
-        inputs:
-          - name: source
-        run:
-          path: ci/test.sh
-          args: ['-e', 'py36,flake8']
-          dir: source
-    on_failure:
-      put: notify
-      params:
-        alert_type: failed
-    on_abort:
-      put: notify
-      params:
-        alert_type: aborted
+          - task: py36
+            config:
+              platform: linux
+              image_resource:
+                type: docker-image
+                source:
+                  repository: python
+                  tag: 3.6
+              inputs:
+                - name: source
+              run:
+                path: ci/test.sh
+                args: ['-e', 'py36,flake8']
+                dir: source
+        on_failure:
+          put: notify
+          params:
+            alert_type: failed
+        on_abort:
+          put: notify
+          params:
+            alert_type: aborted
+        on_success:
+          put: notify
+          params:
+            alert_type: success
 
-- name: maybe_release
-  plan:
-  - get: source
-    trigger: true
-    passed: [unit]
+  - name: maybe_release
+    plan:
+      - get: source
+        trigger: true
+        passed: [unit]
 
-  - task: build_and_release
-    config:
-      platform: linux
-      image_resource:
-        type: docker-image
-        source:
-          repository: python
-          tag: 3.6
-      params:
-        TWINE_USERNAME: ((twine_user))
-        TWINE_PASSWORD: ((twine_pass))
-      inputs:
-        - name: source
-      run:
-        path: ci/release.sh
-        dir: source
-    on_success:
-      put: notify
-      params:
-        alert_type: success
-    on_failure:
-      put: notify
-      params:
-        alert_type: failed
-    on_abort:
-      put: notify
-      params:
-        alert_type: aborted
+      - task: build_and_release
+        config:
+          platform: linux
+          image_resource:
+            type: docker-image
+            source:
+              repository: python
+              tag: 3.6
+          params:
+            TWINE_USERNAME: ((twine_user))
+            TWINE_PASSWORD: ((twine_pass))
+          inputs:
+            - name: source
+          run:
+            path: ci/release.sh
+            dir: source
+        on_success:
+          put: notify
+          params:
+            alert_type: success
+        on_failure:
+          put: notify
+          params:
+            alert_type: failed
+        on_abort:
+          put: notify
+          params:
+            alert_type: aborted
