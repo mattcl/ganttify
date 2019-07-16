@@ -18,7 +18,7 @@ else:
         long_description = f.read()
 
 requirements = [
-    'altair>=2.4.1',
+    'altair>=2.4.1,<3',
     'Click>=7.0',
     'pandas>=0.24.2',
 ]
@@ -41,6 +41,6 @@ setup(
     name='ganttify',
     packages=find_packages(include=['ganttify']),
     setup_requires=setup_requirements,
-    version='0.2.0',
+    version='0.2.1',
     zip_safe=False,
 )
